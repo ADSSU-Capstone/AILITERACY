@@ -11,7 +11,6 @@ from sklearn.metrics import (accuracy_score, precision_score, recall_score,
                               f1_score, silhouette_score, confusion_matrix)
 from sklearn.preprocessing import StandardScaler
 from itertools import combinations
-import io
 import re
 import unicodedata
 
@@ -25,32 +24,121 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    .stTabs [data-baseweb="tab-list"] { gap: 6px; border-bottom: none; background: transparent; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+
+    .stApp {
+        background: linear-gradient(160deg, #f4f7fb 0%, #eef2f9 50%, #f8f5fb 100%);
+    }
+
+    .block-container { padding-top: 1.6rem; padding-bottom: 2rem; max-width: 1400px; }
+
+    .hero {
+        background: linear-gradient(135deg, #7c9cbf 0%, #9b8dc4 55%, #c49ac2 100%);
+        border-radius: 16px;
+        padding: 26px 32px;
+        color: #ffffff;
+        margin-bottom: 22px;
+        box-shadow: 0 8px 24px rgba(124, 156, 191, 0.28);
+    }
+    .hero h1 { color: #ffffff !important; font-size: 26px; font-weight: 700; margin: 0 0 6px 0; letter-spacing: 0.2px; }
+    .hero p { color: #f0f3f8; margin: 0; font-size: 14px; font-weight: 400; opacity: 0.92; }
+
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px; border-bottom: none; background: transparent; padding: 4px 0;
+    }
     .stTabs [data-baseweb="tab"] {
-        height: 52px; padding: 8px 20px;
-        background-color: #ffffff; border: 2px solid #1e3a8a;
-        border-radius: 6px; color: #1e3a8a; font-weight: 600; font-size: 13px;
+        height: 48px; padding: 6px 22px;
+        background-color: #ffffff;
+        border: 2px solid #d9e2ef;
+        border-radius: 10px;
+        color: #5b6a86;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.2s ease;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        background-color: #f4f7fc;
+        border-color: #9b8dc4;
+        color: #7c6ba8;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #1e3a8a !important; color: #ffffff !important;
-        border-color: #1e3a8a !important;
+        background: linear-gradient(135deg, #7c9cbf 0%, #9b8dc4 100%) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+        box-shadow: 0 4px 12px rgba(124, 156, 191, 0.35);
     }
     .stTabs [data-baseweb="tab-highlight"] { display: none; }
     .stTabs [data-baseweb="tab-border"] { display: none; }
-    .stApp { background-color: #f8fafc; }
-    h1, h2, h3, h4 { color: #1e3a8a; }
+
     div[data-testid="stMetric"] {
-        background: #ffffff; border: 1px solid #e2e8f0;
-        border-left: 4px solid #1e3a8a; border-radius: 8px;
-        padding: 14px 18px;
+        background: #ffffff;
+        border: 1px solid #e4ebf4;
+        border-left: 5px solid #9b8dc4;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 2px 8px rgba(155, 141, 196, 0.08);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    div[data-testid="stMetricLabel"] { color: #475569; }
-    div[data-testid="stMetricValue"] { color: #1e3a8a; }
-    section[data-testid="stSidebar"] { background-color: #f1f5f9; }
+    div[data-testid="stMetric"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(155, 141, 196, 0.16);
+    }
+    div[data-testid="stMetricLabel"] {
+        color: #6b7a95; font-size: 12px; font-weight: 500;
+        text-transform: uppercase; letter-spacing: 0.6px;
+    }
+    div[data-testid="stMetricValue"] {
+        color: #4a5578; font-size: 26px; font-weight: 700;
+    }
+
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #eef2f9 0%, #f3eef8 100%);
+        border-right: 1px solid #e2e8f2;
+    }
+    section[data-testid="stSidebar"] h3 {
+        color: #5b6a86; font-size: 13px; text-transform: uppercase;
+        letter-spacing: 0.8px; font-weight: 700;
+        border-bottom: 2px solid #d9e2ef; padding-bottom: 6px;
+    }
+
+    h3 { color: #4a5578 !important; font-size: 18px; font-weight: 700; margin-top: 4px; }
+
+    .stDataFrame { border-radius: 10px; overflow: hidden; border: 1px solid #e4ebf4; }
+
+    .stAlert { border-radius: 10px; border-left: 4px solid #9b8dc4; }
+
+    div[data-testid="stPlotlyChart"] {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 10px;
+        border: 1px solid #e9eef6;
+        box-shadow: 0 2px 10px rgba(124, 156, 191, 0.06);
+    }
+
+    .insight-box {
+        background: linear-gradient(135deg, #eef3fa 0%, #f2eef9 100%);
+        border-left: 4px solid #7c9cbf;
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-top: 14px;
+        color: #4a5578;
+        font-size: 14px;
+        line-height: 1.55;
+    }
+    .insight-box b { color: #7c6ba8; }
+
+    .stCodeBlock { border-radius: 10px; }
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+PASTEL = ['#7c9cbf', '#9b8dc4', '#c49ac2', '#8fb8a8', '#d4a17a', '#a89cc8']
+CLUSTER_PALETTE = ['#7c9cbf', '#8fb8a8', '#d4a17a', '#c49ac2']
+CAT_COLORS = {'High': '#8fb8a8', 'Moderate': '#d4a17a', 'Low': '#c98b8b'}
+CAT_ORDER = ['High', 'Moderate', 'Low']
 
 KNOWLEDGE_COLS = [
     'KNOWLEDGE [I can define Artificial Intelligence in my own words.]',
@@ -121,9 +209,6 @@ VALID_COLLEGES = [
     'College of Arts and Sciences',
 ]
 
-CAT_COLORS = {'High': '#059669', 'Moderate': '#d97706', 'Low': '#dc2626'}
-CAT_ORDER = ['High', 'Moderate', 'Low']
-
 
 def clean_text(value):
     if pd.isna(value):
@@ -159,15 +244,11 @@ def load_uploaded(uploaded_file):
 
 def generate_example(n=80, seed=42):
     rng = np.random.RandomState(seed)
-    colleges = ['College of Teachers Education',
-                'College of Engineering and Industrial Technology',
-                'College of Computing and Information Sciences',
-                'College of Agriculture',
-                'College of Arts and Sciences']
+    colleges = VALID_COLLEGES
     sexes = ['Male', 'Female']
     years = ['1st Year', '2nd Year', '3rd Year', '4th Year']
-    freq = ['Daily', '3–5 times a week', 'Once a week', '1–3 times a month', 'Rarely']
-    dur = ['Less than 10 minutes', '10–30 minutes', '30–60 minutes', 'More than 1 hour']
+    freq = ['Daily', '3-5 times a week', 'Once a week', '1-3 times a month', 'Rarely']
+    dur = ['Less than 10 minutes', '10-30 minutes', '30-60 minutes', 'More than 1 hour']
     purposes = ['Assignments', 'Research', 'Studying/Reviewing lessons',
                 'Coding/Programming', 'Personal use']
     tools = ['ChatGPT', 'Google Gemini', 'Quillbot', 'Grammarly', 'Perplexity AI']
@@ -361,6 +442,10 @@ def corr_band(r):
     return 'Very Strong'
 
 
+def insight_html(text):
+    st.markdown(f'<div class="insight-box">{text}</div>', unsafe_allow_html=True)
+
+
 def render_literacy(df):
     st.markdown("### AI Literacy Dimension Averages")
     c1, c2, c3, c4 = st.columns(4)
@@ -381,20 +466,18 @@ def render_literacy(df):
         color_discrete_map=CAT_COLORS, text=means['Mean'].round(3),
         category_orders={'Category': CAT_ORDER},
     )
-    fig.update_traces(textposition='outside')
+    fig.update_traces(textposition='outside', marker_line_color='#ffffff', marker_line_width=1.5)
     fig.update_layout(
-        yaxis_range=[1, 5], height=380, showlegend=True,
-        paper_bgcolor='#ffffff', plot_bgcolor='#ffffff',
+        yaxis_range=[1, 5.6], height=400, showlegend=True,
+        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
         yaxis_title='Mean Score', xaxis_title='',
-        margin=dict(l=10, r=10, t=20, b=10),
+        legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
+        margin=dict(l=10, r=10, t=40, b=10),
+        font=dict(family='Inter', color='#4a5578'),
     )
+    fig.update_yaxes(gridcolor='#eef2f9', zeroline=False)
     st.plotly_chart(fig, use_container_width=True)
 
-    class_counts = pd.DataFrame({
-        'Dimension': [],
-        'Category': [],
-        'Count': [],
-    })
     rows = []
     for dim in ['Knowledge', 'Skills', 'Awareness']:
         counts = df[f'{dim}_Class'].value_counts().reindex(CAT_ORDER, fill_value=0)
@@ -407,21 +490,25 @@ def render_literacy(df):
         color_discrete_map=CAT_COLORS, barmode='stack',
         category_orders={'Category': CAT_ORDER},
     )
+    fig2.update_traces(marker_line_color='#ffffff', marker_line_width=1.5)
     fig2.update_layout(
-        height=340, paper_bgcolor='#ffffff', plot_bgcolor='#ffffff',
+        height=360, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
         yaxis_title='Respondent Count', xaxis_title='',
-        margin=dict(l=10, r=10, t=20, b=10),
+        legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
+        margin=dict(l=10, r=10, t=40, b=10),
+        font=dict(family='Inter', color='#4a5578'),
     )
+    fig2.update_yaxes(gridcolor='#eef2f9', zeroline=False)
     st.plotly_chart(fig2, use_container_width=True)
 
     top_dim = means.iloc[:-1]['Mean'].idxmax()
     top_name = means.iloc[top_dim]['Dimension']
-    low_name = means.iloc[:-1]['Mean'].idxmin()
-    low_name = means.iloc[low_name]['Dimension']
-    st.markdown(
-        f"Respondents show the strongest literacy in **{top_name}** and the weakest in "
-        f"**{low_name}**. Overall AI Literacy falls in the "
-        f"**{categorize(df['AI_Literacy'].mean())}** band based on the paper's score interpretation."
+    low_idx = means.iloc[:-1]['Mean'].idxmin()
+    low_name = means.iloc[low_idx]['Dimension']
+    insight_html(
+        f"Respondents show the strongest literacy in <b>{top_name}</b> and the weakest in "
+        f"<b>{low_name}</b>. Overall AI Literacy falls in the "
+        f"<b>{categorize(df['AI_Literacy'].mean())}</b> band based on the score interpretation."
     )
 
 
@@ -441,15 +528,18 @@ def render_ethics(df):
             x=item_means.values, y=short_labels, orientation='h',
             labels={'x': 'Mean Score', 'y': ''},
             color=item_means.values,
-            color_continuous_scale=['#dc2626', '#d97706', '#059669'],
+            color_continuous_scale=[[0, '#c98b8b'], [0.5, '#d4a17a'], [1, '#8fb8a8']],
             range_color=[1, 5],
         )
+        fig.update_traces(marker_line_color='#ffffff', marker_line_width=1)
         fig.update_layout(
-            height=max(420, len(short_labels) * 26),
-            paper_bgcolor='#ffffff', plot_bgcolor='#ffffff',
+            height=max(440, len(short_labels) * 28),
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
             coloraxis_showscale=False,
-            margin=dict(l=10, r=10, t=20, b=10),
+            margin=dict(l=10, r=20, t=20, b=10),
+            font=dict(family='Inter', color='#4a5578'),
         )
+        fig.update_xaxes(gridcolor='#eef2f9', zeroline=False, range=[1, 5.2])
         st.plotly_chart(fig, use_container_width=True)
 
     counts = df['Ethics_Class'].value_counts().reindex(CAT_ORDER, fill_value=0)
@@ -458,18 +548,20 @@ def render_ethics(df):
         color_discrete_map=CAT_COLORS, text=counts.values,
         category_orders={'x': CAT_ORDER},
     )
-    fig2.update_traces(textposition='outside')
+    fig2.update_traces(textposition='outside', marker_line_color='#ffffff', marker_line_width=1.5)
     fig2.update_layout(
-        height=320, showlegend=False, paper_bgcolor='#ffffff',
-        plot_bgcolor='#ffffff', xaxis_title='Ethics Category',
-        yaxis_title='Respondent Count', margin=dict(l=10, r=10, t=20, b=10),
+        height=340, showlegend=False, paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)', xaxis_title='Ethics Category',
+        yaxis_title='Respondent Count', margin=dict(l=10, r=10, t=30, b=10),
+        font=dict(family='Inter', color='#4a5578'),
     )
+    fig2.update_yaxes(gridcolor='#eef2f9', zeroline=False)
     st.plotly_chart(fig2, use_container_width=True)
 
     pct_high = (df['Ethics_Class'] == 'High').mean() * 100
-    st.markdown(
-        f"Overall Ethical Awareness is **{categorize(df['Ethics'].mean())}** with "
-        f"**{pct_high:.1f}%** of respondents in the High band."
+    insight_html(
+        f"Overall Ethical Awareness is <b>{categorize(df['Ethics'].mean())}</b> with "
+        f"<b>{pct_high:.1f}%</b> of respondents in the High band."
     )
 
 
@@ -514,20 +606,24 @@ def render_association(df):
     fig = px.scatter(
         scatter_df, x='SupportPct', y='ConfidencePct',
         size='Lift', color='Lift', hover_name='Antecedent',
-        color_continuous_scale='Blues',
+        color_continuous_scale=[[0, '#c49ac2'], [0.5, '#9b8dc4'], [1, '#7c9cbf']],
         labels={'SupportPct': 'Support (%)',
                 'ConfidencePct': 'Confidence (%)',
                 'Lift': 'Lift'},
     )
+    fig.update_traces(marker=dict(line=dict(width=1.5, color='#ffffff')))
     fig.update_layout(
-        height=380, paper_bgcolor='#ffffff', plot_bgcolor='#ffffff',
+        height=400, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(l=10, r=10, t=20, b=10),
+        font=dict(family='Inter', color='#4a5578'),
     )
+    fig.update_xaxes(gridcolor='#eef2f9', zeroline=False)
+    fig.update_yaxes(gridcolor='#eef2f9', zeroline=False)
     st.plotly_chart(fig, use_container_width=True)
 
     top = rules.iloc[0]
-    st.markdown(
-        f"The strongest rule is **{top['Antecedent']} → {top['Consequent']}** with "
+    insight_html(
+        f"The strongest rule is <b>{top['Antecedent']} → {top['Consequent']}</b> with "
         f"support {top['Support'] * 100:.1f}% ({support_band(top['Support'])}), "
         f"confidence {top['Confidence'] * 100:.1f}% ({confidence_band(top['Confidence'])}), "
         f"and lift {top['Lift']:.2f} ({lift_band(top['Lift'])})."
@@ -573,38 +669,49 @@ def render_clustering(df):
 
     centroids['Cluster Label'] = [label_map[c] for c in centroids.index]
     centroids = centroids.reset_index()
+    short_labels = [l.replace('Students', '').strip()[:30] for l in centroids['Cluster Label']]
+    centroids['Short'] = short_labels
 
     fig = go.Figure()
-    palette = ['#1e3a8a', '#0891b2', '#f59e0b', '#dc2626']
     for i, feat in enumerate(features):
         fig.add_trace(go.Bar(
-            name=feat, x=centroids['Cluster Label'],
-            y=centroids[feat], marker_color=palette[i],
+            name=feat, x=centroids['Short'],
+            y=centroids[feat], marker_color=PASTEL[i],
+            marker_line_color='#ffffff', marker_line_width=1.5,
         ))
     fig.update_layout(
-        barmode='group', height=400,
-        paper_bgcolor='#ffffff', plot_bgcolor='#ffffff',
+        barmode='group', height=420,
+        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
         yaxis_title='Mean Score', xaxis_title='',
-        margin=dict(l=10, r=10, t=20, b=10),
+        legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
+        margin=dict(l=10, r=10, t=40, b=10),
+        font=dict(family='Inter', color='#4a5578'),
     )
+    fig.update_yaxes(gridcolor='#eef2f9', zeroline=False)
     st.plotly_chart(fig, use_container_width=True)
 
     sizes = df['Cluster Label'].value_counts().reset_index()
     sizes.columns = ['Cluster Label', 'Count']
     fig2 = px.pie(
-        sizes, values='Count', names='Cluster Label', hole=0.45,
-        color_discrete_sequence=['#1e3a8a', '#0891b2', '#f59e0b', '#dc2626'],
+        sizes, values='Count', names='Cluster Label', hole=0.55,
+        color_discrete_sequence=CLUSTER_PALETTE,
+    )
+    fig2.update_traces(
+        textposition='outside', textinfo='percent+label',
+        marker=dict(line=dict(color='#ffffff', width=2)),
     )
     fig2.update_layout(
-        height=380, paper_bgcolor='#ffffff',
+        height=420, paper_bgcolor='rgba(0,0,0,0)',
+        showlegend=False,
         margin=dict(l=10, r=10, t=20, b=10),
+        font=dict(family='Inter', color='#4a5578'),
     )
     st.plotly_chart(fig2, use_container_width=True)
 
     largest = sizes.iloc[0]
-    st.markdown(
-        f"The largest cluster is **{largest['Cluster Label']}** with "
-        f"**{largest['Count']}** respondents. "
+    insight_html(
+        f"The largest cluster is <b>{largest['Cluster Label']}</b> with "
+        f"<b>{largest['Count']}</b> respondents. "
         f"Silhouette of {sil:.3f} indicates "
         f"{'well-separated clusters' if sil > 0.5 else 'moderate cluster separation' if sil > 0.25 else 'overlapping cluster boundaries'}."
     )
@@ -647,21 +754,23 @@ def render_classification(df):
     cm = confusion_matrix(y, pred, labels=labels)
     fig = px.imshow(
         cm, x=labels, y=labels, text_auto=True,
-        color_continuous_scale='Blues', aspect='auto',
+        color_continuous_scale=[[0, '#f4f7fb'], [0.5, '#9b8dc4'], [1, '#7c9cbf']],
+        aspect='auto',
         labels={'x': 'Predicted', 'y': 'Actual'},
     )
     fig.update_layout(
-        height=360, paper_bgcolor='#ffffff',
+        height=380, paper_bgcolor='rgba(0,0,0,0)',
         margin=dict(l=10, r=10, t=20, b=10),
+        font=dict(family='Inter', color='#4a5578'),
     )
     st.plotly_chart(fig, use_container_width=True)
 
     rules_text = export_text(model, feature_names=features)
     st.code(rules_text, language='text')
 
-    st.markdown(
+    insight_html(
         f"The entropy-based tree reaches a cross-validated accuracy of "
-        f"**{scores.mean():.3f}** and an in-sample F1-Score of **{f1:.3f}** "
+        f"<b>{scores.mean():.3f}</b> and an in-sample F1-Score of <b>{f1:.3f}</b> "
         f"when predicting Ethical Awareness from Knowledge, Skills, and Awareness."
     )
 
@@ -695,18 +804,21 @@ def render_correlation(df):
         return
     table = pd.DataFrame(rows)
 
-    fig = px.bar(
-        table, x='Pair', y='r', color='r',
-        color_continuous_scale='RdBu', range_color=[-1, 1], text=table['r'].round(3),
-    )
-    fig.update_traces(textposition='outside')
-    fig.add_hline(y=0, line_dash='dash', line_color='#64748b')
+    colors = ['#8fb8a8' if v >= 0 else '#c98b8b' for v in table['r']]
+    fig = go.Figure(go.Bar(
+        x=table['Pair'], y=table['r'],
+        marker_color=colors, marker_line_color='#ffffff', marker_line_width=1.5,
+        text=table['r'].round(3), textposition='outside',
+    ))
+    fig.add_hline(y=0, line_dash='dash', line_color='#b0b8c8')
     fig.update_layout(
-        height=380, paper_bgcolor='#ffffff', plot_bgcolor='#ffffff',
-        yaxis_range=[-1, 1], yaxis_title='Spearman r',
-        xaxis_title='', coloraxis_showscale=False,
+        height=400, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+        yaxis_range=[-1.1, 1.1], yaxis_title='Spearman r',
+        xaxis_title='', showlegend=False,
         margin=dict(l=10, r=10, t=20, b=10),
+        font=dict(family='Inter', color='#4a5578'),
     )
+    fig.update_yaxes(gridcolor='#eef2f9', zeroline=False)
     st.plotly_chart(fig, use_container_width=True)
 
     display = table.copy()
@@ -715,9 +827,9 @@ def render_correlation(df):
     st.dataframe(display, use_container_width=True, hide_index=True)
 
     top_row = table.iloc[table['r'].abs().argmax()]
-    st.markdown(
-        f"The strongest association is **{top_row['Pair']}** with r = "
-        f"**{top_row['r']:.3f}** ({top_row['Strength']} {top_row['Direction'].lower()} relationship) "
+    insight_html(
+        f"The strongest association is <b>{top_row['Pair']}</b> with r = "
+        f"<b>{top_row['r']:.3f}</b> ({top_row['Strength']} {top_row['Direction'].lower()} relationship) "
         f"and p = {top_row['p-value']:.4f}. "
         f"{'This relationship is statistically significant.' if top_row['p-value'] < 0.05 else 'This relationship is not statistically significant.'}"
     )
@@ -753,7 +865,15 @@ if prepared.empty:
     st.info("No respondents match the current filters.")
     st.stop()
 
-st.markdown("# AI Literacy and Ethical Awareness Analysis")
+st.markdown(
+    """
+    <div class="hero">
+        <h1>AI Literacy and Ethical Awareness</h1>
+        <p>Interactive analysis of literacy dimensions, ethical awareness, and their relationships across respondents</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 top1, top2, top3, top4 = st.columns(4)
 top1.metric("Respondents", len(prepared))
