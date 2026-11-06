@@ -5,12 +5,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 from scipy import stats
 from sklearn.cluster import KMeans
-from sklearn.tree import DecisionTreeClassifier, export_text
+from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.metrics import (accuracy_score, precision_score, recall_score,
                               f1_score, silhouette_score, confusion_matrix)
 from sklearn.preprocessing import StandardScaler
 from itertools import combinations
+import matplotlib.pyplot as plt
 import re
 import unicodedata
 
@@ -726,10 +727,17 @@ def render_classification(df):
         st.info("Not enough variation or respondents to train and cross-validate the classifier.")
         return
 
+    # --- UPDATED DECISION TREE PARAMETERS ---
+    # Added class_weight='balanced' to fix the domination of the 'Moderate' class.
+    # Increased max_depth to allow the tree to find the minority classes.
     model = DecisionTreeClassifier(
-        criterion='entropy', max_depth=4,
-        min_samples_leaf=3, random_state=42,
+        criterion='entropy', 
+        max_depth=6,              
+        min_samples_leaf=2,       
+        class_weight='balanced',  
+        random_state=42,
     )
+    
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     scores = cross_val_score(model, X, y, cv=cv, scoring='accuracy')
     model.fit(X, y)
@@ -765,13 +773,30 @@ def render_classification(df):
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    rules_text = export_text(model, feature_names=features)
-    st.code(rules_text, language='text')
+    # --- REPLACED EXPORT_TEXT WITH VISUAL TREE ---
+    st.markdown("#### Visual Decision Tree Structure")
+    st.markdown("*(Note: The tree is deeper now and isolates specific groups rather than predicting 'Moderate' for everything.)*")
+    
+    # Create the matplotlib figure
+    fig_tree, ax = plt.subplots(figsize=(18, 10))
+    plot_tree(
+        model, 
+        feature_names=features, 
+        class_names=model.classes_, 
+        filled=True, 
+        rounded=True, 
+        fontsize=10,
+        proportion=True, # Shows percentage of samples in each node
+        impurity=False,
+        ax=ax
+    )
+    st.pyplot(fig_tree)
 
     insight_html(
         f"The entropy-based tree reaches a cross-validated accuracy of "
         f"<b>{scores.mean():.3f}</b> and an in-sample F1-Score of <b>{f1:.3f}</b> "
-        f"when predicting Ethical Awareness from Knowledge, Skills, and Awareness."
+        f"when predicting Ethical Awareness from Knowledge, Skills, and Awareness. "
+        f"Class balancing was applied to ensure the minority classes (High/Low) are captured."
     )
 
 
